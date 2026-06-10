@@ -1,0 +1,7 @@
+node_modules/
+out/
+.vscode-test/
+*.vsix
+# 保护本地配置文件
+config.json
+.env

@@ -1,0 +1,87 @@
+{
+  "name": "claude-code-hud",
+  "displayName": "Claude Code HUD",
+  "description": "Real-time status HUD for Claude Code: context usage, cost, cache hit rate, and task progress",
+  "version": "0.1.0",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["Other"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "claudeCodeHud.show",
+        "title": "Claude Code HUD: Show Panel"
+      },
+      {
+        "command": "claudeCodeHud.refresh",
+        "title": "Claude Code HUD: Refresh"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "claudeCodeHud",
+          "title": "Claude Code HUD",
+          "icon": "$(robot)"
+        }
+      ]
+    },
+    "views": {
+      "claudeCodeHud": [
+        {
+          "type": "webview",
+          "id": "claudeCodeHud.panel",
+          "name": "Status"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Claude Code HUD",
+      "properties": {
+        "claudeCodeHud.contextLimit": {
+          "type": "number",
+          "default": 200000,
+          "description": "Max context tokens (e.g. 200000 for Sonnet, 1000000 for Gemini-style). Shown as percentage bar."
+        },
+        "claudeCodeHud.refreshInterval": {
+          "type": "number",
+          "default": 3000,
+          "description": "Auto-refresh interval in milliseconds"
+        },
+        "claudeCodeHud.inputCostPer1M": {
+          "type": "number",
+          "default": 3.0,
+          "description": "Input token cost per 1M tokens (USD)"
+        },
+        "claudeCodeHud.outputCostPer1M": {
+          "type": "number",
+          "default": 15.0,
+          "description": "Output token cost per 1M tokens (USD)"
+        },
+        "claudeCodeHud.cacheWriteCostPer1M": {
+          "type": "number",
+          "default": 3.75,
+          "description": "Cache write cost per 1M tokens (USD)"
+        },
+        "claudeCodeHud.cacheReadCostPer1M": {
+          "type": "number",
+          "default": 0.30,
+          "description": "Cache read cost per 1M tokens (USD)"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.3.0"
+  }
+}
