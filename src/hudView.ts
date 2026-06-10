@@ -116,26 +116,20 @@ function buildHtml(s: SessionStats, dailySpend: DailySpend[], thresholds: CostTh
 
   const todoRows = s.todos.map((t, i) => {
     const pct = t.status === 'completed' ? 100 : t.status === 'in_progress' ? 50 : 0;
-    const bar = progressBar(pct, 10);
+    const barColor = t.status === 'completed' ? '#4ade80' : t.status === 'in_progress' ? '#60a5fa' : '#334155';
     const model = t.model ? shortModel(t.model) : shortModel(s.model);
     const cost = t.cost != null ? fmtCost(t.cost) : '';
     const label = t.content.length > 45 ? t.content.slice(0, 44) + '…' : t.content;
-    const dots = '.'.repeat(Math.max(2, 48 - label.length - model.length));
     return `
       <div class="todo-row ${todoStatusClass(t.status)}">
         <span class="todo-idx">${i + 1}.</span>
-        <span class="todo-bar">[${bar}]</span>
+        <div class="bar-track" style="height:6px;width:50px;flex:none"><div class="bar-fill" style="width:${pct}%;background:${barColor}"></div></div>
         <span class="todo-pct">${pct}%</span>
         <span class="todo-label">${label}</span>
-        <span class="todo-dots">${dots}</span>
         <span class="todo-model">[${model}]</span>
         ${cost ? `<span class="todo-cost">(${cost})</span>` : ''}
       </div>`;
   }).join('');
-
-  const contextBar = progressBar(contextPct, 30);
-  const cacheBar = progressBar(cachePct, 20);
-  const overallBar = progressBar(totalPct, 20);
 
   const contextColor = contextPct > 85 ? '#f87171' : contextPct > 60 ? '#fbbf24' : '#4ade80';
   const cacheColor = cachePct > 50 ? '#4ade80' : cachePct > 20 ? '#fbbf24' : '#94a3b8';
@@ -183,6 +177,19 @@ function buildHtml(s: SessionStats, dailySpend: DailySpend[], thresholds: CostTh
     font-family: monospace;
     letter-spacing: 1px;
   }
+  .bar-track {
+    flex: 1;
+    height: 10px;
+    background: #1e293b;
+    border-radius: 3px;
+    overflow: hidden;
+    min-width: 0;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+  }
   .pct { font-weight: bold; min-width: 38px; text-align: right; }
   .val { color: var(--vscode-textLink-foreground, #4ec9b0); }
   .cost-grid {
@@ -215,12 +222,10 @@ function buildHtml(s: SessionStats, dailySpend: DailySpend[], thresholds: CostTh
   .todo-done { opacity: 0.55; }
   .todo-active { color: #4ade80; }
   .todo-pending { color: var(--vscode-foreground); }
-  .todo-idx { color: #888; min-width: 18px; text-align: right; }
-  .todo-bar { color: #60a5fa; font-family: monospace; letter-spacing: 0; }
-  .todo-pct { min-width: 34px; text-align: right; color: #888; }
+  .todo-idx { color: #888; min-width: 18px; text-align: right; flex-shrink: 0; }
+  .todo-pct { min-width: 34px; text-align: right; color: #888; flex-shrink: 0; }
   .todo-label { flex: 1; overflow: hidden; text-overflow: ellipsis; }
-  .todo-dots { color: #555; }
-  .todo-model { color: #a78bfa; }
+  .todo-model { color: #a78bfa; flex-shrink: 0; }
   .todo-cost { color: #fbbf24; }
   .overall-row {
     display: flex;
@@ -417,7 +422,7 @@ function buildHtml(s: SessionStats, dailySpend: DailySpend[], thresholds: CostTh
   <div class="section-body">
     <div class="stat-row">
       <span class="stat-label">Used</span>
-      <span class="bar" style="color:${contextColor}">${contextBar}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:${contextPct.toFixed(1)}%;background:${contextColor}"></div></div>
       <span class="pct" style="color:${contextColor}">${contextPct.toFixed(1)}%</span>
     </div>
     <div class="stat-row">
@@ -444,7 +449,7 @@ function buildHtml(s: SessionStats, dailySpend: DailySpend[], thresholds: CostTh
   <div class="section-body">
     <div class="stat-row">
       <span class="stat-label">Hit Rate</span>
-      <span class="bar" style="color:${cacheColor}">${cacheBar}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:${cachePct}%;background:${cacheColor}"></div></div>
       <span class="pct" style="color:${cacheColor}">${cachePct}%</span>
     </div>
     <div class="stat-row">
@@ -700,7 +705,7 @@ ${(() => {
     ${totalTodos > 0 ? `
     <div class="overall-row">
       <span>Overall</span>
-      <span class="bar" style="color:#60a5fa">${overallBar}</span>
+      <div class="bar-track" style="height:6px"><div class="bar-fill" style="width:${totalPct}%;background:#60a5fa"></div></div>
       <span class="pct">${totalPct}%</span>
       <span style="color:#555">(${activeTodos} active)</span>
     </div>` : ''}

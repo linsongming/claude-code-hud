@@ -11,6 +11,7 @@ let statusBarItem: vscode.StatusBarItem;
 
 // null = auto-follow latest session; string = pinned session file path
 let pinnedSessionFile: string | null = null;
+let previewMode = false;
 
 const CONFIG_PATH = path.join(os.homedir(), '.claude', 'claude-code-hud.json');
 
@@ -122,6 +123,7 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(statusBarItem);
 
   function refresh(): void {
+    if (previewMode) return;
     const workspacePath = getWorkspacePath();
     if (!workspacePath) {
       provider.update(null, []);
@@ -183,6 +185,28 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('claudeCodeHud.switchSession', (filePath: string | null) => {
       pinnedSessionFile = filePath; // null = back to auto-follow
       refresh();
+    }),
+    vscode.commands.registerCommand('claudeCodeHud.exitPreview', () => {
+      previewMode = false;
+      refresh();
+      vscode.window.showInformationMessage('Claude Code HUD: Preview Mode off');
+    }),
+    vscode.commands.registerCommand('claudeCodeHud.previewMode', () => {
+      previewMode = true;
+      const cfg = readConfig();
+      const mockStats = buildMockStats(cfg);
+      const mockDaily: DailySpend[] = [
+        { date: '2026-06-04', cost: 0.82 },
+        { date: '2026-06-05', cost: 1.45 },
+        { date: '2026-06-06', cost: 0.37 },
+        { date: '2026-06-07', cost: 2.11 },
+        { date: '2026-06-08', cost: 0.96 },
+        { date: '2026-06-09', cost: 1.73 },
+        { date: '2026-06-10', cost: 0.54 },
+      ];
+      provider.update(mockStats, [], null, mockDaily, { warning: 1.5, limit: 3.0 });
+      vscode.commands.executeCommand('claudeCodeHud.panel.focus');
+      vscode.window.showInformationMessage('Claude Code HUD: Preview Mode (mock data)');
     })
   );
 
@@ -213,6 +237,71 @@ export function activate(context: vscode.ExtensionContext): void {
 
   refresh();
   startTimer();
+}
+
+function buildMockStats(cfg: HudConfig): SessionStats {
+  return {
+    sessionId: 'preview-mock-1234abcd',
+    sessionFile: '/mock/preview.jsonl',
+    sessionTitle: '帮我优化这个项目的性能，分析瓶颈并给出方案',
+    usage: {
+      inputTokens: 142000,
+      outputTokens: 18400,
+      cacheCreationTokens: 136000,
+      cacheReadTokens: 505800,
+    },
+    cost: {
+      inputCost: 0.426,
+      outputCost: 0.276,
+      cacheWriteCost: 0.510,
+      cacheReadCost: 0.1517,
+      totalCost: 1.3637,
+      savedByCacheUSD: 1.3656,
+    },
+    cache: {
+      totalInputTokens: 647800,
+      cacheReadTokens: 505800,
+      cacheCreationTokens: 136000,
+      hitRate: 0.781,
+    },
+    tools: {
+      counts: {
+        Bash: 76,
+        Edit: 75,
+        Read: 37,
+        Write: 11,
+        mcp__ide__getDiagnostics: 8,
+        mcp__ide__executeCode: 5,
+        mcp__github__create_pull_request: 2,
+        mcp__github__list_issues: 4,
+        TodoWrite: 6,
+        Agent: 3,
+      },
+      webSearches: 4,
+      webFetches: 2,
+    },
+    bloat: {
+      rounds: 24,
+      minCostPerRound: 0.019,
+    },
+    todos: [
+      { content: '分析项目性能瓶颈', status: 'completed', model: 'claude-sonnet-4-6' },
+      { content: '优化数据库查询，添加索引', status: 'completed', model: 'claude-sonnet-4-6' },
+      { content: '重构 API 响应缓存层', status: 'completed', model: 'claude-sonnet-4-6' },
+      { content: '压测并对比优化前后数据', status: 'in_progress', model: 'claude-sonnet-4-6' },
+      { content: '编写性能优化文档', status: 'pending', model: 'claude-sonnet-4-6' },
+    ],
+    model: 'claude-sonnet-4-6',
+    lastUpdated: new Date(),
+    contextLimit: cfg.contextLimit ?? 200000,
+    contextLimitSource: 'auto',
+    pricing: {
+      inputPer1M: cfg.inputCostPer1M,
+      outputPer1M: cfg.outputCostPer1M,
+      cacheWritePer1M: cfg.cacheWriteCostPer1M,
+      cacheReadPer1M: cfg.cacheReadCostPer1M,
+    },
+  };
 }
 
 export function deactivate(): void {
