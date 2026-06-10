@@ -3,7 +3,7 @@
 一个 VSCode 插件，实时展示 Claude Code 的会话状态：上下文用量、费用、缓存命中率、任务进度等。
 
 ## 功能概览
-<img width="360" height="1281" alt="Image" src="https://github.com/user-attachments/assets/96cda7eb-e938-483e-aedb-318f9ed75df7" />
+<img width="359" height="1193" alt="Image" src="https://github.com/user-attachments/assets/f17ff41f-1259-44cf-8d18-831f5c9d70a8" />
 
 ### Context Window — 上下文用量
 - 进度条 + 百分比，实时反映当前 token 消耗
